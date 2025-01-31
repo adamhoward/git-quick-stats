@@ -1,3 +1,7 @@
+# My Fork Changelog
+- Switch to legacy theme which looks better on light background terminals
+- Have the script automatically switch to using `gdate` when on a Mac
+
 # GIT quick statistics [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Simple%20and%20efficient%20way%20to%20access%20various%20statistics%20in%20git%20repository&url=https://github.com/arzzen/git-quick-stat&via=arzzen&hashtags=git,stats,tool,statistics,developers)
 
 [![Backers on Open Collective](https://opencollective.com/git-quick-stats/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/git-quick-stats/sponsors/badge.svg)](#sponsors)  [![Homebrew package](https://repology.org/badge/version-for-repo/homebrew/git-quick-stats.svg)](https://formulae.brew.sh/formula/git-quick-stats#default)
