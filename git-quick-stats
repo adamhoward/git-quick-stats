@@ -10,6 +10,20 @@
 set -o nounset
 set -o errexit
 
+################################################################################
+# ALH: Switch to g-aliased commands if running on MacOS
+# Detect OS type
+OS_TYPE="$(uname -s)"
+
+# Default command names
+DATE_CMD="date"
+
+if [[ "$OS_TYPE" == "Darwin" ]]; then
+    # macOS detected, check for GNU versions installed via Homebrew
+    if command -v gdate &>/dev/null; then DATE_CMD="gdate"; fi
+fi
+################################################################################
+
 # Beginning git log date. Respects all git datetime formats
 # If $_GIT_SINCE is never set, look at the repository to find the first date.
 # NOTE: previously this put the date at the fixed GIT epoch (May 2005)
@@ -27,7 +41,7 @@ _until=${_GIT_UNTIL:-}
 if [[ -n "${_until}" ]]; then
     _until="--until=$_until"
 else
-    _until="--until=$(date '+%a, %d %b %Y %H:%M:%S %Z')"
+    _until="--until=$($DATE_CMD '+%a, %d %b %Y %H:%M:%S %Z')"
 fi
 
 # Set files or directories to be excluded in stats
@@ -82,7 +96,7 @@ _theme="${_MENU_THEME:=legacy}"
 ################################################################################
 function checkUtils() {
     readonly MSG="not found. Please make sure this is installed and in PATH."
-    readonly UTILS="awk basename cat column date echo git grep head printf seq \
+    readonly UTILS="awk basename cat column $DATE_CMD echo git grep head printf seq \
                     sort tput tr uniq"
 
     for u in $UTILS
@@ -98,7 +112,7 @@ function checkUtils() {
     # between the two. Until that's implemented, it is probably best to warn
     # the user that this will not work rather than having it silently bomb out
     # during runtime.
-    if ! date --version >/dev/null 2>&1; then
+    if ! $DATE_CMD --version >/dev/null 2>&1; then
         echo "ERROR: GNU date is required."
         echo "If you're on macOS, please install it using 'brew install coreutils'."
         echo "Ensure that your PATH is configured to use GNU date as well."
@@ -401,7 +415,7 @@ function changelogs() {
     local _author=""
     local commits=""
     local author="${1:-}"
-    local next=$(date +%F)
+    local next=$($DATE_CMD +%F)
 
     if [[ -z "${author}" ]]; then
         optionPicked "Git changelogs:"
@@ -451,8 +465,8 @@ function myDailyStats() {
 
     echo -e "\t" $(git -c log.showSignature=false log --use-mailmap \
                        --author="$(git config user.name)" $_merges \
-                       --since=$(date "+%Y-%m-%dT00:00:00") \
-                       --until=$(date "+%Y-%m-%dT23:59:59") --reverse $_log_options \
+                       --since=$($DATE_CMD "+%Y-%m-%dT00:00:00") \
+                       --until=$($DATE_CMD "+%Y-%m-%dT23:59:59") --reverse $_log_options \
                        | grep -cE "commit [a-f0-9]{40}") "commits"
 }
 
@@ -699,7 +713,7 @@ function newContributors() {
         local firstCommit=$(git -c log.showSignature=false log --author="$c" \
                          --reverse --use-mailmap $_merges "$_since" "$_until" \
                          --format='%at' $_log_options $_pathspec | head -n 1)
-        if [[ $firstCommit -ge $(date -d "$newDate" +%s) ]]; then
+        if [[ $firstCommit -ge $($DATE_CMD -d "$newDate" +%s) ]]; then
            echo "$c"
         fi
     done
@@ -764,7 +778,7 @@ function parse_year() {
     # Handle the raw UNIX timestamp format i.e. 1697375696 +0000
     if [[ "$date_str" =~ ^[0-9]+(\ [+-][0-9]{4})?$ ]]; then
         timestamp=$(echo "$date_str" | awk '{print $1}')
-        year=$(date -d "@$timestamp" '+%Y' 2>/dev/null)
+        year=$($DATE_CMD -d "@$timestamp" '+%Y' 2>/dev/null)
     else
         # Default case can get funky. We need to create a clever regex to
         # handle the default case which is like Mon Oct 15 12:34:56 2023 +0000
@@ -785,7 +799,7 @@ function parse_year() {
             date_str=$(echo "$date_str" | awk -F'/' '{print $2"/"$1"/"$3}')
         fi
         # Extract the final date
-        year=$(date -d "$date_str" '+%Y' 2>/dev/null)
+        year=$($DATE_CMD -d "$date_str" '+%Y' 2>/dev/null)
     fi
 
     echo "$year"
@@ -1086,7 +1100,7 @@ if [[ "$#" -eq 1 ]]; then
                 # what people may try. This script doesn't provide any additional
                 # output for a bad date since `date`'s STDERR already contains
                 # useful information.
-                if ! date -d "${newDate}" +%s > /dev/null 2>&1; then
+                if ! $DATE_CMD -d "${newDate}" +%s > /dev/null 2>&1; then
                    newDate=""
                 fi
             done
@@ -1174,7 +1188,7 @@ while [[ "${opt}" != "" ]]; do
            while [[ -z "${newDate}" ]]; do
                read -r -p "Since what date? (e.g. '2023-04-13', '13 April 2023', 'last Thursday') " newDate
                # Test if the date provide is valid and try again if it isn't.
-               if ! date -d "${newDate}" +%s > /dev/null 2>&1; then
+               if ! $DATE_CMD -d "${newDate}" +%s > /dev/null 2>&1; then
                   newDate=""
                fi
            done
