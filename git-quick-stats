@@ -70,7 +70,7 @@ fi
 
 # Default menu theme
 # Set the legacy theme by typing "export _MENU_THEME=legacy"
-_theme="${_MENU_THEME:=default}"
+_theme="${_MENU_THEME:=legacy}"
 
 ################################################################################
 # HELPER AND MENU FUNCTIONS
